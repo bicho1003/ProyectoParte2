@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
+
+    <Button
+        android:id="@+id/volumenButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Volumen" />
+
+    <Button
+        android:id="@+id/ruidoButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ruido/Tono blanco"
+        android:layout_below="@id/volumenButton" />
+
+    <Button
+        android:id="@+id/programaButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Programa"
+        android:layout_below="@id/ruidoButton" />
+
+    <Button
+        android:id="@+id/pitchButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pitch"
+        android:layout_below="@id/programaButton" />
+    <Button
+        android:id="@+id/programaA0Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Programa A0"
+        android:layout_below="@id/programaButton"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/programaA1Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Programa A1"
+        android:layout_below="@id/programaA0Button"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/programaA2Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Programa A2"
+        android:layout_below="@id/programaA1Button"
+        android:visibility="gone" />
+    <Button
+        android:id="@+id/ruidoBlancoSuaveButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ruido blanco suave"
+        android:layout_below="@id/ruidoButton"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/tonoModuladoButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tono modulado"
+        android:layout_below="@id/ruidoBlancoSuaveButton"
+        android:visibility="gone" />
+    <Button
+        android:id="@+id/arribaButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Arriba"
+        android:layout_below="@id/pitchButton"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/abajoButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Abajo"
+        android:layout_below="@id/arribaButton"
+        android:visibility="gone" />
+    <Button
+        android:id="@+id/regresarButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Regresar"
+        android:visibility="gone" />
+
+</RelativeLayout>
