@@ -12,6 +12,11 @@ public class pantallaProgramas extends Activity {
     private AudioController audioController;
     private PopupController popupController;
     private BluetoothConnector bluetoothConnector;
+    private Thread blinkThread;
+    private int startTime;
+    private int endTime = 15 * 60; // 15 minutos en segundos
+    private String currentProgram;
+    private volatile boolean isPaused = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,6 +131,7 @@ public class pantallaProgramas extends Activity {
                     areButtonsHidden[4] = false;
                 }
                 audioController.changeAudioResource(R.raw.a0); // Cambiar el recurso de audio
+                currentProgram = "A0";
             }
         });
         programButtonController.setOnClickListener(R.id.programaA1Button, new View.OnClickListener() {
@@ -143,6 +149,7 @@ public class pantallaProgramas extends Activity {
                     areButtonsHidden[4] = false;
                 }
                 audioController.changeAudioResource(R.raw.a1);
+                currentProgram = "A1";
             }
         });
         programButtonController.setOnClickListener(R.id.programaA2Button, new View.OnClickListener() {
@@ -160,6 +167,7 @@ public class pantallaProgramas extends Activity {
                     areButtonsHidden[4] = false;
                 }
                 audioController.changeAudioResource(R.raw.a2);
+                currentProgram = "A2";
             }
         });
         programButtonController.setOnClickListener(R.id.startButton, new View.OnClickListener() {
@@ -167,8 +175,86 @@ public class pantallaProgramas extends Activity {
             public void onClick(View v) {
                 // Iniciar la reproducción del audio
                 audioController.play();
-                // Enviar 'I' al Arduino
-                bluetoothConnector.sendData("I");
+
+                // Iniciar la secuencia de parpadeo
+                if (blinkThread != null && blinkThread.isAlive()) {
+                    blinkThread.interrupt();
+                }
+                startTime = 0;
+                blinkThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (startTime < endTime && !Thread.currentThread().isInterrupted()) {
+                            synchronized (blinkThread) {
+                                while (isPaused) {
+                                    try {
+                                        blinkThread.wait();
+                                    } catch (InterruptedException e) {
+                                        Thread.currentThread().interrupt();
+                                    }
+                                }
+                            }
+                            // Aquí puedes implementar la secuencia de parpadeo específica para el programa actualmente seleccionado
+                            switch (currentProgram) {
+                                case "A0":
+                                    // Fase 1: de 18hz a 7hz en 5 minutos
+                                    float startFrequency1 = 18f;
+                                    float endFrequency1 = 7f;
+                                    float duration1 = 5 * 60; // 5 minutos en segundos
+                                    float deltaFrequency1 = (endFrequency1 - startFrequency1) / duration1;
+                                    for (int i = 0; i < duration1; i++) {
+                                        float currentFrequency = startFrequency1 + deltaFrequency1 * i;
+                                        bluetoothConnector.sendData(String.valueOf(currentFrequency) + "\n"); // Enviar la frecuencia actual a Arduino con un carácter de nueva línea
+                                        try {
+                                            Thread.sleep(1000);
+                                        } catch (InterruptedException e) {
+                                            Thread.currentThread().interrupt(); // Restablecer el estado interrumpido
+                                        }
+                                    }
+                                    // Fase 2: mantener en 7hz durante 7 minutos
+                                    float frequency2 = 7f;
+                                    float duration2 = 7 * 60; // 7 minutos en segundos
+                                    for (int i = 0; i < duration2; i++) {
+                                        bluetoothConnector.sendData(String.valueOf(frequency2) + "\n"); // Enviar la frecuencia actual a Arduino con un carácter de nueva línea
+                                        try {
+                                            Thread.sleep(1000);
+                                        } catch (InterruptedException e) {
+                                            Thread.currentThread().interrupt(); // Restablecer el estado interrumpido
+                                        }
+                                    }
+
+                                    // Fase 3: de 7hz a 40hz en 3 minutos
+                                    float startFrequency3 = 7f;
+                                    float endFrequency3 = 40f;
+                                    float duration3 = 3 * 60; // 3 minutos en segundos
+                                    float deltaFrequency3 = (endFrequency3 - startFrequency3) / duration3;
+                                    for (int i = 0; i < duration3; i++) {
+                                        float currentFrequency = startFrequency3 + deltaFrequency3 * i;
+                                        bluetoothConnector.sendData(String.valueOf(currentFrequency) + "\n"); // Enviar la frecuencia actual a Arduino con un carácter de nueva línea
+                                        try {
+                                            Thread.sleep(1000);
+                                        } catch (InterruptedException e) {
+                                            Thread.currentThread().interrupt(); // Restablecer el estado interrumpido
+                                        }
+                                    }
+                                    break;
+                                case "A1":
+                                    // Implementar la secuencia de parpadeo para el programa A1
+                                    break;
+                                case "A2":
+                                    // Implementar la secuencia de parpadeo para el programa A2
+                                    break;
+                            }
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                            startTime++;
+                        }
+                    }
+                });
+                blinkThread.start();
             }
         });
 
@@ -177,8 +263,10 @@ public class pantallaProgramas extends Activity {
             public void onClick(View v) {
                 // Pausar la reproducción del audio
                 audioController.pause();
-                // Enviar 'A' al Arduino
-                bluetoothConnector.sendData("A");
+
+                // Pausar la secuencia de parpadeo
+                    isPaused = true;
+                    bluetoothConnector.sendData("0\n");
             }
         });
         programButtonController.setOnClickListener(R.id.resumeButton, new View.OnClickListener() {
@@ -186,6 +274,11 @@ public class pantallaProgramas extends Activity {
             public void onClick(View v) {
                 // Reanudar la reproducción del audio
                 audioController.play();
+                // Reanudar la secuencia de parpadeo
+                synchronized (blinkThread) {
+                    isPaused = false;
+                    blinkThread.notify();
+                }
             }
         });
     }
