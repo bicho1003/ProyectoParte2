@@ -11,6 +11,7 @@ public class pantallaProgramas extends Activity {
     private ButtonController pitchButtonController;
     private AudioController audioController;
     private PopupController popupController;
+    private BluetoothConnector bluetoothConnector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +23,7 @@ public class pantallaProgramas extends Activity {
         pitchButtonController = new ButtonController(this, R.id.arribaButton, R.id.abajoButton);
         audioController = new AudioController(this, R.raw.a0);  // Cambiar el recurso según sea necesario
         popupController = new PopupController(this);
+        bluetoothConnector = new BluetoothConnector();
         configureButtonActions();
     }
     private void configureButtonActions() {
@@ -85,6 +87,7 @@ public class pantallaProgramas extends Activity {
                     programButtonController.setInvisibleButtons(R.id.programaA0Button, R.id.programaA1Button, R.id.programaA2Button);
                     areButtonsHidden[2] = false;
                 }
+                bluetoothConnector.connect();
             }
         });
         mainButtonController.setOnClickListener(R.id.pitchButton, new View.OnClickListener() {
@@ -164,6 +167,8 @@ public class pantallaProgramas extends Activity {
             public void onClick(View v) {
                 // Iniciar la reproducción del audio
                 audioController.play();
+                // Enviar 'I' al Arduino
+                bluetoothConnector.sendData("I");
             }
         });
 
@@ -172,9 +177,10 @@ public class pantallaProgramas extends Activity {
             public void onClick(View v) {
                 // Pausar la reproducción del audio
                 audioController.pause();
+                // Enviar 'A' al Arduino
+                bluetoothConnector.sendData("A");
             }
         });
-
         programButtonController.setOnClickListener(R.id.resumeButton, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
