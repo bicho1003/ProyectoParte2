@@ -14,9 +14,7 @@ public class pantallaProgramas extends Activity {
     private BluetoothConnector bluetoothConnector;
     private Thread blinkThread;
     private int startTime;
-    private int endTime = 15 * 60; // 15 minutos en segundos
     private String currentProgram;
-    private volatile boolean isPaused = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -179,83 +177,57 @@ public class pantallaProgramas extends Activity {
 
                 // Iniciar la secuencia de parpadeo
                 if (blinkThread != null && blinkThread.isAlive()) {
-                    blinkThread.interrupt();
+                    blinkThread.interrupt(); // Interrumpe el hilo si ya está ejecutándose
                 }
                 startTime = 0;
-                blinkThread = new Thread(new Runnable() {
+
+                Thread blinkThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        while (startTime < endTime && !Thread.currentThread().isInterrupted()) {
-                            synchronized (blinkThread) {
-                                while (isPaused) {
-                                    try {
-                                        blinkThread.wait();
-                                    } catch (InterruptedException e) {
-                                        Thread.currentThread().interrupt();
-                                    }
-                                }
-                            }
-                            // Aquí puedes implementar la secuencia de parpadeo específica para el programa actualmente seleccionado
+                        try {
+                            // Ejecutar la secuencia de parpadeo
                             switch (currentProgram) {
                                 case "A0":
-                                    // Fase 1: de 18hz a 7hz en 5 minutos
-                                    float startFrequency1 = 18f;
-                                    float endFrequency1 = 7f;
-                                    float duration1 = 5 * 60; // 5 minutos en segundos
-                                    float deltaFrequency1 = (endFrequency1 - startFrequency1) / duration1;
-                                    for (int i = 0; i < duration1; i++) {
-                                        float currentFrequency = startFrequency1 + deltaFrequency1 * i;
-                                        bluetoothConnector.sendData(String.valueOf(currentFrequency) + "\n"); // Enviar la frecuencia actual a Arduino con un carácter de nueva línea
-                                        try {
-                                            Thread.sleep(1000);
-                                        } catch (InterruptedException e) {
-                                            Thread.currentThread().interrupt(); // Restablecer el estado interrumpido
-                                        }
-                                    }
-                                    // Fase 2: mantener en 7hz durante 7 minutos
-                                    float frequency2 = 7f;
-                                    float duration2 = 7 * 60; // 7 minutos en segundos
-                                    for (int i = 0; i < duration2; i++) {
-                                        bluetoothConnector.sendData(String.valueOf(frequency2) + "\n"); // Enviar la frecuencia actual a Arduino con un carácter de nueva línea
-                                        try {
-                                            Thread.sleep(1000);
-                                        } catch (InterruptedException e) {
-                                            Thread.currentThread().interrupt(); // Restablecer el estado interrumpido
-                                        }
-                                    }
-
-                                    // Fase 3: de 7hz a 40hz en 3 minutos
-                                    float startFrequency3 = 7f;
-                                    float endFrequency3 = 40f;
-                                    float duration3 = 3 * 60; // 3 minutos en segundos
-                                    float deltaFrequency3 = (endFrequency3 - startFrequency3) / duration3;
-                                    for (int i = 0; i < duration3; i++) {
-                                        float currentFrequency = startFrequency3 + deltaFrequency3 * i;
-                                        bluetoothConnector.sendData(String.valueOf(currentFrequency) + "\n"); // Enviar la frecuencia actual a Arduino con un carácter de nueva línea
-                                        try {
-                                            Thread.sleep(1000);
-                                        } catch (InterruptedException e) {
-                                            Thread.currentThread().interrupt(); // Restablecer el estado interrumpido
-                                        }
-                                    }
+                                    blinkSequence(18f, 7f, 5 * 60); // de 18hz a 7hz en 5 minutos
+                                    blinkSequence(7f, 7f, 7 * 60); // mantener en 7hz durante 7 minutos
+                                    blinkSequence(7f, 40f, 3 * 60); // de 7hz a 40hz en 3 minutos
                                     break;
                                 case "A1":
-                                    // Implementar la secuencia de parpadeo para el programa A1
                                     break;
                                 case "A2":
-                                    // Implementar la secuencia de parpadeo para el programa A2
                                     break;
                             }
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt(); // Restablecer el estado interrumpido
+                        }
+                    }
+                });
+                Thread amplitudeThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            // Ejecutar la secuencia de amplitud
+                            switch (currentProgram) {
+                                case "A0":
+                                    amplitudeSequence(50, 100, 3 * 60); // de 50 a 100 en 3 minutos
+                                    amplitudeSequence(100, 80, 2 * 60); // de 100 a 80 en 2 minutos
+                                    amplitudeSequence(80, 50, 7 * 60); // de 80 a 50 en 7 minutos
+                                    amplitudeSequence(50, 100, 2 * 60); // de 50 a 100 en 2 minutos
+                                    amplitudeSequence(100, 100, 1 * 60); // mantener en 100 durante 1 minuto
+                                    amplitudeSequence(100, 0, 1 * 60); // de 100 a 0 en 1 minuto
+                                    break;
+                                case "A1":
+                                    break;
+                                case "A2":
+                                    break;
                             }
-                            startTime++;
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt(); // Restablecer el estado interrumpido
                         }
                     }
                 });
                 blinkThread.start();
+                amplitudeThread.start();
             }
         });
 
@@ -264,10 +236,6 @@ public class pantallaProgramas extends Activity {
             public void onClick(View v) {
                 // Pausar la reproducción del audio
                 audioController.pause();
-
-                // Pausar la secuencia de parpadeo
-                    isPaused = true;
-                    bluetoothConnector.sendData("0\n");
             }
         });
         programButtonController.setOnClickListener(R.id.resumeButton, new View.OnClickListener() {
@@ -275,18 +243,38 @@ public class pantallaProgramas extends Activity {
             public void onClick(View v) {
                 // Reanudar la reproducción del audio
                 audioController.play();
-                // Reanudar la secuencia de parpadeo
-                synchronized (blinkThread) {
-                    isPaused = false;
-                    blinkThread.notify();
-                }
             }
         });
     }
+    private void blinkSequence(float startFrequency, float endFrequency, int duration) throws InterruptedException {
+        float deltaFrequency = (endFrequency - startFrequency) / duration;
+        for (int i = 0; i < duration; i++) {
+            if (Thread.currentThread().isInterrupted()) {
+                return; // Salir de la función si el hilo es interrumpido
+            }
+            float currentFrequency = startFrequency + deltaFrequency * i;
+            bluetoothConnector.sendData("F" + String.valueOf(currentFrequency) + "\n"); // Enviar la frecuencia actual a Arduino con un carácter de nueva línea
+            Thread.sleep(1000);
+        }
+    }
 
+    private void amplitudeSequence(int startAmplitude, int endAmplitude, int duration) throws InterruptedException {
+        float deltaAmplitude = (float)(endAmplitude - startAmplitude) / duration;
+        for (int i = 0; i < duration; i++) {
+            if (Thread.currentThread().isInterrupted()) {
+                return; // Salir de la función si el hilo es interrumpido
+            }
+            int currentAmplitude = Math.round(startAmplitude + deltaAmplitude * i);
+            bluetoothConnector.sendData("A" + String.valueOf(currentAmplitude) + "\n"); // Enviar la amplitud actual a Arduino con un carácter de nueva línea
+            Thread.sleep(1000);
+        }
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (blinkThread != null && blinkThread.isAlive()) {
+            blinkThread.interrupt(); // Interrumpe el hilo al destruir la actividad
+        }
         audioController.release();
     }
 }
