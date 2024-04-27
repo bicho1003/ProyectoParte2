@@ -77,6 +77,7 @@ public class pantallaProgramas extends Activity {
             }
         });
         mainButtonController.setOnClickListener(R.id.programaButton, new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
                 if (!areButtonsHidden[2]) {
