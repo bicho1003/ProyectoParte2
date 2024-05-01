@@ -15,6 +15,7 @@ public class pantallaProgramas extends Activity {
     private Thread blinkThread;
     private int startTime;
     private String currentProgram;
+    private volatile boolean isPaused = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -234,6 +235,10 @@ public class pantallaProgramas extends Activity {
         programButtonController.setOnClickListener(R.id.pauseButton, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Pausar la secuencia de parpadeo
+                isPaused = true;
+                //enviar 0 a arduino para detener la vibración
+                bluetoothConnector.sendData("F0\n");
                 // Pausar la reproducción del audio
                 audioController.pause();
             }
@@ -241,6 +246,8 @@ public class pantallaProgramas extends Activity {
         programButtonController.setOnClickListener(R.id.resumeButton, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Reanudar la secuencia de parpadeo
+                isPaused = false;
                 // Reanudar la reproducción del audio
                 audioController.play();
             }
@@ -251,6 +258,9 @@ public class pantallaProgramas extends Activity {
         for (int i = 0; i < duration; i++) {
             if (Thread.currentThread().isInterrupted()) {
                 return; // Salir de la función si el hilo es interrumpido
+            }
+            while (isPaused) { // Si isPaused es verdadero, hacer que el hilo se duerma
+                Thread.sleep(1000);
             }
             float currentFrequency = startFrequency + deltaFrequency * i;
             bluetoothConnector.sendData("F" + String.valueOf(currentFrequency) + "\n"); // Enviar la frecuencia actual a Arduino con un carácter de nueva línea
