@@ -260,7 +260,7 @@ public class pantallaProgramas extends Activity {
                 return; // Salir de la función si el hilo es interrumpido
             }
             while (isPaused) { // Si isPaused es verdadero, hacer que el hilo se duerma
-                Thread.sleep(1000);
+                Thread.sleep(100);
             }
             float currentFrequency = startFrequency + deltaFrequency * i;
             bluetoothConnector.sendData("F" + String.valueOf(currentFrequency) + "\n"); // Enviar la frecuencia actual a Arduino con un carácter de nueva línea
