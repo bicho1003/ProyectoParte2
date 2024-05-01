@@ -13,10 +13,18 @@ public class BluetoothConnector {
     private BluetoothSocket mSocket;
     private OutputStream mOutputStream;
     private static final String DEVICE_ADDRESS = "00:21:13:00:7A:AC";
+    private static BluetoothConnector instance = null;
 
     public BluetoothConnector() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mDevice = mBluetoothAdapter.getRemoteDevice(DEVICE_ADDRESS);
+    }
+
+    public static BluetoothConnector getInstance() {
+        if (instance == null) {
+            instance = new BluetoothConnector();
+        }
+        return instance;
     }
 
     public void connect() {

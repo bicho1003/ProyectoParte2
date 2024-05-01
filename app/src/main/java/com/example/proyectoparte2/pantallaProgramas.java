@@ -11,11 +11,14 @@ public class pantallaProgramas extends Activity {
     private ButtonController pitchButtonController;
     private AudioController audioController;
     private PopupController popupController;
-    private BluetoothConnector bluetoothConnector;
+    BluetoothConnector bluetoothConnector = BluetoothConnector.getInstance();
     private Thread blinkThread;
     private int startTime;
     private String currentProgram;
     private volatile boolean isPaused = false;
+    private volatile boolean isRuido = true;
+    private int currentToneIndex = 0; // Índice del tono actual en el array de tonos
+    private int[] tones = {R.raw.a0, R.raw.a1, R.raw.a2,R.raw.ruidoblanco}; // Array de tonos
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,7 +30,6 @@ public class pantallaProgramas extends Activity {
         pitchButtonController = new ButtonController(this, R.id.arribaButton, R.id.abajoButton);
         audioController = new AudioController(this, R.raw.a0);  // Cambiar el recurso según sea necesario
         popupController = new PopupController(this);
-        bluetoothConnector = new BluetoothConnector();
         configureButtonActions();
     }
     private void configureButtonActions() {
@@ -76,7 +78,6 @@ public class pantallaProgramas extends Activity {
             }
         });
         mainButtonController.setOnClickListener(R.id.programaButton, new View.OnClickListener() {
-
             @Override
             public void onClick(View v) {
                 if (!areButtonsHidden[2]) {
@@ -92,7 +93,6 @@ public class pantallaProgramas extends Activity {
                     programButtonController.setInvisibleButtons(R.id.programaA0Button, R.id.programaA1Button, R.id.programaA2Button);
                     areButtonsHidden[2] = false;
                 }
-                bluetoothConnector.connect();
             }
         });
         mainButtonController.setOnClickListener(R.id.pitchButton, new View.OnClickListener() {
@@ -116,6 +116,24 @@ public class pantallaProgramas extends Activity {
                 }
             }
         });
+        pitchButtonController.setOnClickListener(R.id.arribaButton, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Incrementar el índice del tono
+                currentToneIndex = (currentToneIndex + 1) % tones.length;
+                // Cambiar el tono que se está reproduciendo
+                audioController.changeAudioResource(tones[currentToneIndex]);
+            }
+        });
+        pitchButtonController.setOnClickListener(R.id.abajoButton, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Disminuir el índice del tono
+                currentToneIndex = (currentToneIndex - 1 + tones.length) % tones.length;
+                // Cambiar el tono que se está reproduciendo
+                audioController.changeAudioResource(tones[currentToneIndex]);
+            }
+        });
         programButtonController.setOnClickListener(R.id.programaA0Button, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -130,7 +148,9 @@ public class pantallaProgramas extends Activity {
                     mainButtonController.setVisibleButtons(R.id.programaButton); // Mostrar el botón de programa
                     areButtonsHidden[4] = false;
                 }
-                audioController.changeAudioResource(R.raw.a0); // Cambiar el recurso de audio
+                if (!isRuido) {
+                    audioController.changeAudioResource(R.raw.a0); // Cambiar el recurso de audio
+                }
                 currentProgram = "A0";
             }
         });
@@ -148,7 +168,9 @@ public class pantallaProgramas extends Activity {
                     mainButtonController.setVisibleButtons(R.id.programaButton); // Mostrar el botón de programa
                     areButtonsHidden[4] = false;
                 }
-                audioController.changeAudioResource(R.raw.a1);
+                if (!isRuido) {
+                    audioController.changeAudioResource(R.raw.a1); // Cambiar el recurso de audio
+                }
                 currentProgram = "A1";
             }
         });
@@ -166,7 +188,9 @@ public class pantallaProgramas extends Activity {
                     mainButtonController.setVisibleButtons(R.id.programaButton); // Mostrar el botón de programa
                     areButtonsHidden[4] = false;
                 }
-                audioController.changeAudioResource(R.raw.a2);
+                if (!isRuido) {
+                    audioController.changeAudioResource(R.raw.a1); // Cambiar el recurso de audio
+                }
                 currentProgram = "A2";
             }
         });
@@ -189,9 +213,9 @@ public class pantallaProgramas extends Activity {
                             // Ejecutar la secuencia de parpadeo
                             switch (currentProgram) {
                                 case "A0":
-                                    blinkSequence(18f, 7f, 5 * 60); // de 18hz a 7hz en 5 minutos
-                                    blinkSequence(7f, 7f, 7 * 60); // mantener en 7hz durante 7 minutos
-                                    blinkSequence(7f, 40f, 3 * 60); // de 7hz a 40hz en 3 minutos
+                                    blinkSequence("A0",18f, 7f, 5 * 60); // de 18hz a 7hz en 5 minutos
+                                    blinkSequence("A0", 7f, 7f, 7 * 60); // mantener en 7hz durante 7 minutos
+                                    blinkSequence("A0",7f, 40f, 3 * 60); // de 7hz a 40hz en 3 minutos
                                     break;
                                 case "A1":
                                     break;
@@ -249,24 +273,36 @@ public class pantallaProgramas extends Activity {
                 // Reanudar la secuencia de parpadeo
                 isPaused = false;
                 // Reanudar la reproducción del audio
-                audioController.play();
+                    audioController.play();
             }
         });
     }
-    private void blinkSequence(float startFrequency, float endFrequency, int duration) throws InterruptedException {
-        float deltaFrequency = (endFrequency - startFrequency) / duration;
-        for (int i = 0; i < duration; i++) {
-            if (Thread.currentThread().isInterrupted()) {
-                return; // Salir de la función si el hilo es interrumpido
-            }
-            while (isPaused) { // Si isPaused es verdadero, hacer que el hilo se duerma
-                Thread.sleep(100);
-            }
-            float currentFrequency = startFrequency + deltaFrequency * i;
-            bluetoothConnector.sendData("F" + String.valueOf(currentFrequency) + "\n"); // Enviar la frecuencia actual a Arduino con un carácter de nueva línea
-            Thread.sleep(1000);
+    private void blinkSequence(String program, float startFrequency, float endFrequency, int duration) throws InterruptedException {
+    float deltaFrequency = (endFrequency - startFrequency) / duration;
+    for (int i = 0; i < duration; i++) {
+        if (Thread.currentThread().isInterrupted()) {
+            return; // Salir de la función si el hilo es interrumpido
         }
+        while (isPaused) { // Si isPaused es verdadero, hacer que el hilo se duerma
+            Thread.sleep(100);
+        }
+        float currentFrequency = startFrequency + deltaFrequency * i;
+        if (program.equals("A0")) {
+            if (i % 2 == 0) {
+                // Encender ambos LEDs
+                bluetoothConnector.sendData("1F" + String.valueOf(currentFrequency) + "\n");
+                bluetoothConnector.sendData("2F" + String.valueOf(currentFrequency) + "\n");
+            } else {
+                // Apagar ambos LEDs
+                bluetoothConnector.sendData("1F0\n");
+                bluetoothConnector.sendData("2F0\n");
+            }
+        } else if (program.equals("A1")) {
+            bluetoothConnector.sendData("2F0\n");
+        }
+        Thread.sleep(1000);
     }
+}
 
     private void amplitudeSequence(int startAmplitude, int endAmplitude, int duration) throws InterruptedException {
         float deltaAmplitude = (float)(endAmplitude - startAmplitude) / duration;
@@ -275,7 +311,11 @@ public class pantallaProgramas extends Activity {
                 return; // Salir de la función si el hilo es interrumpido
             }
             int currentAmplitude = Math.round(startAmplitude + deltaAmplitude * i);
-            bluetoothConnector.sendData("A" + String.valueOf(currentAmplitude) + "\n"); // Enviar la amplitud actual a Arduino con un carácter de nueva línea
+            // Enviar la amplitud actual a Arduino con un carácter de nueva línea
+            // Para el LED 1
+            bluetoothConnector.sendData("1A" + String.valueOf(currentAmplitude) + "\n");
+            // Para el LED 2
+            bluetoothConnector.sendData("2A" + String.valueOf(currentAmplitude) + "\n");
             Thread.sleep(1000);
         }
     }

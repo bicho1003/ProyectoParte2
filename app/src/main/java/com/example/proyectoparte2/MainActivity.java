@@ -37,6 +37,10 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, pantallaProgramas.class);
             Toast.makeText(MainActivity.this, "Bienvenido", Toast.LENGTH_SHORT).show();
             startActivity(intent);
+
+            // Conectar al dispositivo Bluetooth después de iniciar sesión
+            BluetoothConnector bluetoothConnector = BluetoothConnector.getInstance();
+            bluetoothConnector.connect();
         } else {
             Toast.makeText(MainActivity.this, "Datos Incorrectos", Toast.LENGTH_SHORT).show();
         }
