@@ -228,8 +228,27 @@ public class pantallaProgramas extends Activity {
                                     blinkSequence(7f, 40f, 3 * 60,"32"); // de 7hz a 40hz en 3 minutos
                                     break;
                                 case "A1":
+                                    blinkSequence(17f, 16f, 1 * 60,"1202"); // de 18hz a 7hz en 5 minutos
+                                    blinkSequence(16f, 15f, 1 * 60,"32");
+                                    blinkSequence(15f, 14f, 1 * 60,"32");
+                                    blinkSequence(14f, 12f, 1 * 60,"3222");
+                                    blinkSequence(12f, 11f, 1 * 60,"1202");
+                                    blinkSequence(11f, 5f, 2 * 60,"1202");
+                                    blinkSequence(5f, 5f, 7 * 60,"1202");
+                                    blinkSequence(5f, 20f, 2 * 60,"1202");
                                     break;
                                 case "A2":
+                                    blinkSequence(8f, 30f, 3 * 60,"1202");
+                                    blinkSequence(30f, 6f, 3 * 60,"3222");
+                                    blinkSequence(6f, 20f, 3 * 60,"32");
+                                    blinkSequence(20f, 4f, 3 * 60,"1202");
+                                    blinkSequence(4f, 18f, 3 * 60,"3222");
+                                    blinkSequence(18f, 6f, 3 * 60,"32");
+                                    blinkSequence(6f, 24f, 3 * 60,"1202");
+                                    blinkSequence(24f, 10f, 3 * 60,"3222");
+                                    blinkSequence(10f, 20f, 3 * 60,"32");
+                                    blinkSequence(20f, 6f, 2 * 60,"1202");
+                                    blinkSequence(6f, 30f, 1 * 60,"32");
                                     break;
                             }
                         } catch (InterruptedException e) {
@@ -252,6 +271,7 @@ public class pantallaProgramas extends Activity {
                                     amplitudeSequence(100, 0, 1 * 60); // de 100 a 0 en 1 minuto
                                     break;
                                 case "A1":
+                                    
                                     break;
                                 case "A2":
                                     break;
