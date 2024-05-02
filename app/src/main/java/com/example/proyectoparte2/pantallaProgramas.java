@@ -271,9 +271,16 @@ public class pantallaProgramas extends Activity {
                                     amplitudeSequence(100, 0, 1 * 60); // de 100 a 0 en 1 minuto
                                     break;
                                 case "A1":
-                                    
+                                    amplitudeSequence(50, 100, 2 * 60);
+                                    amplitudeSequence(100, 60, 5 * 60);
+                                    amplitudeSequence(60, 60, 7 * 60);
+                                    amplitudeSequence(60, 100, 1 * 60);
+                                    amplitudeSequence(100, 0, 1 * 60);
                                     break;
                                 case "A2":
+                                    amplitudeSequence(100, 70, 3 * 60);
+                                    amplitudeSequence(70, 70, 24 * 60);
+                                    amplitudeSequence(70, 100, 3 * 60);
                                     break;
                             }
                         } catch (InterruptedException e) {
